@@ -17,6 +17,7 @@ from flask_restful_swagger import (
 from jinja2 import Template
 
 resource_listing_endpoint = None
+_auth_token_type = None
 
 
 def docs(api, apiVersion='0.0', swaggerVersion='1.2',
@@ -24,9 +25,12 @@ def docs(api, apiVersion='0.0', swaggerVersion='1.2',
          resourcePath='/',
          produces=["application/json"],
          api_spec_url='/api/spec',
+         auth_token_type=None,
          description='Auto generated API docs by flask-restful-swagger'):
 
   api_add_resource = api.add_resource
+  global _auth_token_type
+  _auth_token_type = auth_token_type
 
   def add_resource(resource, *urls, **kvargs):
     register_once(api, api_add_resource, apiVersion, swaggerVersion, basePath,
@@ -180,7 +184,8 @@ def render_page(page, info):
     url = url.rstrip('/')
   conf = {
     'base_url': url + api_spec_static,
-    'full_base_url': url + api_spec_static
+    'full_base_url': url + api_spec_static,
+    'auth_token_type': _auth_token_type
   }
   if info is not None:
     conf.update(info)
