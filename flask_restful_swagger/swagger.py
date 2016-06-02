@@ -17,24 +17,21 @@ from flask_restful_swagger import (
 from jinja2 import Template
 
 resource_listing_endpoint = None
-_auth_token_type = None
 
 
 def docs(api, apiVersion='0.0', swaggerVersion='1.2',
          basePath='http://localhost:5000',
+         authTokenType=None,
          resourcePath='/',
          produces=["application/json"],
          api_spec_url='/api/spec',
-         auth_token_type=None,
          description='Auto generated API docs by flask-restful-swagger'):
 
   api_add_resource = api.add_resource
-  global _auth_token_type
-  _auth_token_type = auth_token_type
 
   def add_resource(resource, *urls, **kvargs):
     register_once(api, api_add_resource, apiVersion, swaggerVersion, basePath,
-                  resourcePath, produces, api_spec_url, description)
+                  resourcePath, produces, api_spec_url, description, authTokenType)
 
     resource = make_class(resource)
     for url in urls:
@@ -67,7 +64,7 @@ def make_class(class_or_instance):
 
 
 def register_once(api, add_resource_func, apiVersion, swaggerVersion, basePath,
-                  resourcePath, produces, endpoint_path, description):
+                  resourcePath, produces, endpoint_path, description, authTokenType):
   global api_spec_static
   global resource_listing_endpoint
 
@@ -77,6 +74,7 @@ def register_once(api, add_resource_func, apiVersion, swaggerVersion, basePath,
       'apiVersion': apiVersion,
       'swaggerVersion': swaggerVersion,
       'basePath': basePath,
+      'authTokenType': authTokenType,
       'spec_endpoint_path': endpoint_path,
       'resourcePath': resourcePath,
       'produces': produces,
@@ -112,6 +110,7 @@ def register_once(api, add_resource_func, apiVersion, swaggerVersion, basePath,
       'apiVersion': apiVersion,
       'swaggerVersion': swaggerVersion,
       'basePath': basePath,
+      'authTokenType': authTokenType,
       'spec_endpoint_path': endpoint_path,
       'resourcePath': resourcePath,
       'produces': produces,
@@ -152,7 +151,6 @@ def render_homepage(resource_list_url):
 
 
 def _get_current_registry(api=None):
-  # import ipdb;ipdb.set_trace()
   global registry
   app_name = None
   overrides = {}
@@ -185,7 +183,7 @@ def render_page(page, info):
   conf = {
     'base_url': url + api_spec_static,
     'full_base_url': url + api_spec_static,
-    'auth_token_type': _auth_token_type
+    'auth_token_type': req_registry['authTokenType']
   }
   if info is not None:
     conf.update(info)
